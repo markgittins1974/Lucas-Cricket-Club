@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucas CC Capability Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f3460 0%, #1a4d7a 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #0f3460, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: 2px solid #0f3460;
+            background: white;
+            color: #0f3460;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .btn.active {
+            background: #0f3460;
+            color: white;
+        }
+
+        .search-input {
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0f3460;
+        }
+
+        .domain-section {
+            margin-bottom: 50px;
+        }
+
+        .domain-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .domain-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--domain-color-light), var(--domain-color));
+            border-radius: 8px;
+        }
+
+        .domain-info h2 {
+            font-size: 26px;
+            margin-bottom: 6px;
+            color: #1a1a1a;
+        }
+
+        .domain-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .domain-1 { --domain-color: #16a34a; --domain-color-light: #86efac; }
+        .domain-2 { --domain-color: #0284c7; --domain-color-light: #7dd3fc; }
+        .domain-3 { --domain-color: #ea580c; --domain-color-light: #fed7aa; }
+        .domain-4 { --domain-color: #8b5cf6; --domain-color-light: #ddd6fe; }
+        .domain-5 { --domain-color: #d946ef; --domain-color-light: #f0d9ff; }
+        .domain-6 { --domain-color: #ec4899; --domain-color-light: #fbcfe8; }
+
+        .capability-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .capability-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .capability-item.hidden {
+            display: none;
+        }
+
+        .capability-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid;
+            background: #f9f9f9;
+            user-select: none;
+        }
+
+        .capability-header:hover {
+            background: #f0f0f0;
+        }
+
+        .capability-header.expanded {
+            background: white;
+        }
+
+        .cap-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .cap-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+
+        .cap-purpose {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .cap-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .stage-plan { background: #fef08a; color: #854d0e; }
+        .stage-enable { background: #bfdbfe; color: #1e40af; }
+        .stage-operate { background: #dcfce7; color: #15803d; }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .risk-critical { background: #fecaca; color: #7f1d1d; }
+        .risk-high { background: #fed7aa; color: #7c2d12; }
+        .risk-medium { background: #fef08a; color: #713f12; }
+        .risk-low { background: #dcfce7; color: #15803d; }
+
+        .maturity-mini {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 50px;
+        }
+
+        .maturity-bar-mini {
+            width: 40px;
+            height: 6px;
+            background: #e5e5e5;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .maturity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+        }
+
+        .maturity-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .toggle-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .capability-panel {
+            display: none;
+            padding: 0;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .capability-panel.expanded {
+            display: block;
+        }
+
+        .panel-content {
+            padding: 30px;
+            background: white;
+        }
+
+        .panel-section {
+            margin-bottom: 24px;
+        }
+
+        .panel-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f3460;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #e5e5e5;
+            padding-bottom: 8px;
+        }
+
+        .owner-section {
+            background: #f0f7ff;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #0284c7;
+            margin-bottom: 12px;
+        }
+
+        .owner-label {
+            font-size: 12px;
+            color: #0c4a6e;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .owner-value {
+            font-size: 14px;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .list-item {
+            padding: 10px 0;
+            padding-left: 24px;
+            position: relative;
+            color: #555;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .list-item:before {
+            content: "▪";
+            position: absolute;
+            left: 0;
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 28px; }
+            .capability-header { flex-direction: column; align-items: flex-start; }
+            .cap-badges { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏏 Lucas CC Capability Model</h1>
+            <p class="subtitle">Club Capability Framework - Responsibilities & Activities</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="searchBox" class="search-input" placeholder="Search capabilities...">
+            <button class="btn active" data-filter="all">All</button>
+            <button class="btn" data-filter="domain-1">Junior</button>
+            <button class="btn" data-filter="domain-2">Senior</button>
+            <button class="btn" data-filter="domain-3">Governance</button>
+            <button class="btn" data-filter="domain-4">Facilities</button>
+            <button class="btn" data-filter="domain-5">Commercial</button>
+            <button class="btn" data-filter="domain-6">People</button>
+            <button class="btn" data-filter="strategic">Strategic</button>
+        </div>
+
+        <!-- JUNIOR CRICKET -->
+        <div class="domain-section domain-1">
+            <div class="domain-header">
+                <div class="domain-icon">🎯</div>
+                <div class="domain-info">
+                    <h2>Junior Cricket (U11-U17)</h2>
+                    <p>Age-structured pathway from U11 to U17 leading to senior transition.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-1-list"></div>
+        </div>
+
+        <!-- SENIOR CRICKET -->
+        <div class="domain-section domain-2">
+            <div class="domain-header">
+                <div class="domain-icon">⭐</div>
+                <div class="domain-info">
+                    <h2>Senior Cricket (1st-5th XI)</h2>
+                    <p>Management of senior teams, player recruitment, welfare, and on-field performance.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-2-list"></div>
+        </div>
+
+        <!-- GOVERNANCE -->
+        <div class="domain-section domain-3">
+            <div class="domain-header">
+                <div class="domain-icon">📋</div>
+                <div class="domain-info">
+                    <h2>Governance & Leadership</h2>
+                    <p>Executive leadership, committee, financial management, compliance, and strategy.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-3-list"></div>
+        </div>
+
+        <!-- FACILITIES -->
+        <div class="domain-section domain-4">
+            <div class="domain-header">
+                <div class="domain-icon">🏟️</div>
+                <div class="domain-info">
+                    <h2>Facilities & Infrastructure</h2>
+                    <p>Ground management, pavilion, equipment, and capital projects.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-4-list"></div>
+        </div>
+
+        <!-- COMMERCIAL -->
+        <div class="domain-section domain-5">
+            <div class="domain-header">
+                <div class="domain-icon">💼</div>
+                <div class="domain-info">
+                    <h2>Commercial & Stakeholder</h2>
+                    <p>Sponsorship, marketing, community, grants, BCA liaison.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-5-list"></div>
+        </div>
+
+        <!-- PEOPLE & CULTURE -->
+        <div class="domain-section domain-6">
+            <div class="domain-header">
+                <div class="domain-icon">👥</div>
+                <div class="domain-info">
+                    <h2>People & Culture</h2>
+                    <p>Volunteers, members, diversity, engagement, and club values.</p>
+                </div>
+            </div>
+            <div class="capability-list" id="domain-6-list"></div>
+        </div>
+
+        <!-- STRATEGIC DEVELOPMENT -->
+        <div class="domain-section" style="display: none;" id="strategic-section">
+            <div class="domain-header" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white;">
+                <div class="domain-icon" style="background: rgba(255,255,255,0.2);">📊</div>
+                <div class="domain-info">
+                    <h2 style="color: white;">Strategic Development (2024-2027)</h2>
+                    <p style="color: rgba(255,255,255,0.8);">Key risks, dependencies, and improvement roadmap for club transformation.</p>
+                </div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 22px; color: #0f3460; margin-bottom: 20px; border-bottom: 3px solid #ea580c; padding-bottom: 12px;">Critical Risk Assessment</h2>
+                    
+                    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #dc2626;">
+                        <h3 style="color: #dc2626; font-weight: 700; margin-bottom: 8px;">🔴 CRITICAL: Executive Succession Planning</h3>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Issue:</strong> President and Treasurer roles have no documented succession plan. Mandated 2025/26 transitions with zero preparation creates leadership vacuum risk.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Impact:</strong> Strategic plan execution stalls; financial controls weakened; key decisions delayed across all domains.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Action:</strong> BEGIN IMMEDIATELY. Identify successor candidates, establish shadow programs, document role knowledge. Target: Succession plan published by end Q3 2026.</p>
+                    </div>
+
+                    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #dc2626;">
+                        <h3 style="color: #dc2626; font-weight: 700; margin-bottom: 8px;">🔴 CRITICAL: Paid Junior Coach Not Hired</h3>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Issue:</strong> Strategic milestone is H2 2025. No recruitment started. Budget ($20-30k) not confirmed. Role not defined.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Impact:</strong> Cannot execute team expansion (3xU11, 2xU15). Volunteer coaching will break under growth demands. Talent pipeline stalls.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Action:</strong> Define job description Q4 2026. Secure budget from 2027 financial plan. Begin recruitment by Q1 2027. Hire by pre-season 2027.</p>
+                    </div>
+
+                    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #dc2626;">
+                        <h3 style="color: #dc2626; font-weight: 700; margin-bottom: 8px;">🔴 CRITICAL: Turf Ground Project Undefined</h3>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Issue:</strong> Lucas Central Park is foundational. 2-3 year planning cycle overdue. Funding streams undefined. Project ownership unclear.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Impact:</strong> Cannot expand junior teams (facility constraint). Winter training unavailable. Member recruitment blocked. Sustainability goal unachievable.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Action:</strong> Establish project governance NOW. Assign project owner. Coordinate with Integra on design. Identify funding (CA infrastructure, State Gov, Council). Planning timeline: Q4 2026 - Q2 2027.</p>
+                    </div>
+
+                    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #dc2626;">
+                        <h3 style="color: #dc2626; font-weight: 700; margin-bottom: 8px;">🔴 CRITICAL: Women's Senior Cricket at Risk</h3>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Issue:</strong> Women's team launched 2024/25 but lacks: women's sponsor, female coach pathway, junior girls feeder teams, sub-committee structure.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Impact:</strong> Without investment, women's program stalls after inaugural season. Junior girls pathway (U14, U17) won't materialize. Diversity goal unmet.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Action:</strong> Recruit women's cricket sponsor Q4 2026. Hire female coach for juniors by 2025/26. Establish female sub-committee with 2 committee members. Launch U14 girls 2025/26.</p>
+                    </div>
+
+                    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #dc2626;">
+                        <h3 style="color: #dc2626; font-weight: 700; margin-bottom: 8px;">🔴 CRITICAL: Junior Coordinator Bottleneck</h3>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Issue:</strong> One person owns 13+ junior capabilities: program design, governance, coaching, logistics, player development, member engagement, HPA, women's program, uniforms, finance.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Impact:</strong> Cannot scale junior program from current size. No succession; if role vacant, program collapses. Burnout risk high.</p>
+                        <p style="color: #555; margin-bottom: 12px;"><strong>Action:</strong> De-scope role immediately. Create Junior Committee with distributed responsibilities. Separate "Member Engagement" and "Finance" to dedicated people. Identify backfill for succession.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 22px; color: #0f3460; margin-bottom: 20px; border-bottom: 3px solid #ea580c; padding-bottom: 12px;">Strategic Dependencies</h2>
+                    
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0284c7;">
+                        <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 8px;">Executive Succession → All Domains</h3>
+                        <p style="color: #555;">Leadership transitions cascade. Delayed decisions on coach hiring, facility investment, and women's program cascade across all capabilities. Succession plan drives decision-making speed.</p>
+                    </div>
+
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0284c7;">
+                        <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 8px;">Paid Junior Coach → Team Expansion & Talent Pipeline</h3>
+                        <p style="color: #555;">Cannot grow juniors (3xU11, 2xU15 target) or develop women's pathway without paid coaching. Current volunteer model works at 60 players; breaks at 100+.</p>
+                    </div>
+
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0284c7;">
+                        <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 8px;">Turf Ground → All Expansion Plans</h3>
+                        <p style="color: #555;">Facility constraint blocks junior team expansion, winter training, match scheduling, and senior team growth. 2-3 year planning cycle means decision required NOW.</p>
+                    </div>
+
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0284c7;">
+                        <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 8px;">Financial Health ($50k→$75k→$100k) → Investment Capacity</h3>
+                        <p style="color: #555;">Bank balance target drives ability to fund paid coach, female coach, facility upgrades, sponsorships. Cannot invest without revenue growth. Commercial domain maturity critical.</p>
+                    </div>
+
+                    <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #0284c7;">
+                        <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 8px;">Talent Pipeline (15+ u18-21) → Senior Team Sustainability</h3>
+                        <p style="color: #555;">Strategic goal of 1st Grade readiness depends on junior program delivering graduates to senior system. Requires junior coaching quality (35%), player development (40%), and senior team capacity.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h2 style="font-size: 22px; color: #0f3460; margin-bottom: 20px; border-bottom: 3px solid #ea580c; padding-bottom: 12px;">12-Month Execution Roadmap</h2>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <tr style="background: #f5f5f5;">
+                            <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd; font-weight: 700;">Timeline</th>
+                            <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd; font-weight: 700;">Action</th>
+                            <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd; font-weight: 700;">Owner</th>
+                            <th style="text-align: left; padding: 12px; border-bottom: 2px solid #ddd; font-weight: 700;">Success Criteria</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd; color: #dc2626; font-weight: 700;">Q3 2026 (NOW)</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Executive Succession Planning; Junior Committee Governance</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">President, Committee</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Succession plan published; Junior Committee charter drafted</td>
+                        </tr>
+                        <tr style="background: #f9f9f9;">
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Q4 2026</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Paid Junior Coach Job Description; High Performance Academy Policy; Turf Ground Planning</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Junior Coordinator, Committee</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Coach job spec finalized; HPA policy approved; Turf project owner assigned</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Q1 2027</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Junior Coach Recruitment; Female Coach Recruitment; Turf Funding Applications</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Junior Coordinator, Committee</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Coach shortlist identified; Female coach hired; Grant applications submitted</td>
+                        </tr>
+                        <tr style="background: #f9f9f9;">
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Q2 2027</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Team Registration (U11x3, U15x2); Junior Coach Hired; Women's Program Sponsor Secured</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Junior Coordinator, Treasurer</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;">Teams registered; coach in role; sponsor agreement signed</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background: #f0f7ff; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7;">
+                    <h3 style="color: #0284c7; font-weight: 700; margin-bottom: 12px;">Capability Maturity Target (2027)</h3>
+                    <p style="color: #555; margin-bottom: 12px;"><strong>Junior Cricket:</strong> 40% → 65% (governance, coaching, player development)</p>
+                    <p style="color: #555; margin-bottom: 12px;"><strong>Senior Cricket:</strong> 45% → 70% (coaching, player management, women's pathway)</p>
+                    <p style="color: #555; margin-bottom: 12px;"><strong>Governance:</strong> 35% → 60% (succession completed, committee structure, financial controls)</p>
+                    <p style="color: #555; margin-bottom: 12px;"><strong>Facilities:</strong> 35% → 65% (turf ground planning/early construction, venue agreements formalized)</p>
+                    <p style="color: #555; margin-bottom: 12px;"><strong>Commercial:</strong> 43% → 65% (sponsor renewals secured, women's sponsor added, grant funding secured)</p>
+                    <p style="color: #555;"><strong>People & Culture:</strong> 40% → 65% (volunteer recruitment, women's sub-committee, member engagement)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const capabilities = [
+            // JUNIOR CRICKET
+            {domain: 1, name: 'Program Design & Strategy', stage: 'plan', risk: 'high', owners: ['Junior Coordinator', 'Committee'], 
+             responsibilities: ['Define age cohorts (3xU11, 2xU13, 1xU14g, 2xU15, 2xU17, 1xU17g)', 'Design skill progression pathways', 'Set annual program goals and targets', 'Annual program review'], 
+             activities: ['Age group structure planning', 'Advancement criteria definition', 'Participation tracking', 'Member feedback collection']},
+            
+            {domain: 1, name: 'Junior Committee Governance', stage: 'plan', risk: 'critical', owners: ['Committee', 'Junior Coordinator'], 
+             responsibilities: ['Form Junior Committee with defined roles', 'Monthly governance meetings', 'Define spending authority thresholds', 'Document escalation paths for safety and disputes'], 
+             activities: ['Committee formation', 'Monthly meeting scheduling', 'Decision authority documentation', 'Risk management']},
+            
+            {domain: 1, name: 'Child Safety & Compliance', stage: 'plan', risk: 'medium', owners: ['Child Safety Officer', 'Committee'], 
+             responsibilities: ['Maintain WWCC registers', 'Annual compliance audit', 'Document child safety policy and incident response', 'Conduct annual safety training', 'Manage parent transport forms'], 
+             activities: ['WWCC administration', 'Annual audit scheduling', 'Incident procedure documentation', 'Volunteer training', 'Form collection and storage']},
+            
+            {domain: 1, name: 'Coach Quality & Development', stage: 'enable', risk: 'critical', owners: ['Junior Coordinator', 'BCA'], 
+             responsibilities: ['Recruit paid junior coach (H2 2025)', 'Define BCA accreditation requirements', 'Coordinate coaching workshops', 'Conduct annual coach reviews'], 
+             activities: ['Coach recruitment and hiring', 'Accreditation verification', 'Workshop coordination', 'Performance feedback meetings']},
+            
+            {domain: 1, name: 'Logistics & Facilities', stage: 'enable', risk: 'high', owners: ['Junior Coordinator', 'Committee'], 
+             responsibilities: ['Secure training venue agreements', 'Manage player transport arrangements', 'Plan winter training alternatives', 'Support turf ground project'], 
+             activities: ['Venue contract management', 'Transport form collection', 'Winter training planning', 'Ground availability coordination']},
+            
+            {domain: 1, name: 'Match & Training Scheduling', stage: 'operate', risk: 'low', owners: ['Junior Coordinator', 'Coaches'], 
+             responsibilities: ['Coordinate BCA fixture schedules', 'Publish match and training calendar', 'Respond to fixture format changes', 'Manage scheduling conflicts'], 
+             activities: ['BCA liaison meetings', 'Calendar publication and updates', 'Conflict resolution', 'Coach communication']},
+            
+            {domain: 1, name: 'Player Development & Progression', stage: 'operate', risk: 'high', owners: ['Coaches', 'Junior Coordinator'], 
+             responsibilities: ['Define progression criteria for each age group', 'Support u17-18 transition to seniors', 'Identify high-potential players for HPA', 'Provide annual development feedback'], 
+             activities: ['Progression criteria documentation', 'Senior pathway mentoring', 'Talent identification', 'Player feedback sessions']},
+            
+            {domain: 1, name: 'Member Engagement & Communication', stage: 'operate', risk: 'medium', owners: ['Junior Coordinator'], 
+             responsibilities: ['Run parent information sessions and presentation nights', 'Maintain website and social media', 'Publish weekly match and training updates', 'Capture and respond to parent feedback'], 
+             activities: ['Information session and presentation night planning', 'Website and social media updates', 'Weekly fixture and training communications', 'Parent feedback surveys', 'Concern escalation']},
+            
+            {domain: 1, name: 'Parent Communications Strategy', stage: 'enable', risk: 'medium', owners: ['Junior Coordinator', 'Committee'], 
+             responsibilities: ['Define communication channels (email, SMS, website)', 'Establish communication schedule and frequency', 'Document escalation paths for concerns', 'Maintain accurate parent contact list'], 
+             activities: ['Channel selection and setup', 'Communication calendar planning', 'Template creation (updates, alerts, reminders)', 'Contact list management', 'Feedback loop establishment']},
+            
+            {domain: 1, name: 'High Performance Academy', stage: 'enable', risk: 'high', owners: ['Junior Coordinator', 'Adam Eddy'], 
+             responsibilities: ['Define Academy eligibility criteria', 'Manage specialist coaching program', 'Administer scholarship', 'Document HPA policy'], 
+             activities: ['Eligibility criteria definition', 'Coach coordination', 'Participant tracking', 'Annual HPA review']},
+            
+            {domain: 1, name: 'Women\'s Junior Program (U14, U17)', stage: 'enable', risk: 'high', owners: ['Junior Coordinator', 'Female coaches'], 
+             responsibilities: ['Recruit female coaches for U14 and U17 girls', 'Set participation targets', 'Ensure gender-appropriate facilities', 'Support pathway to senior women\'s team'], 
+             activities: ['Coach recruitment', 'Team registration', 'Facility planning', 'Community partnerships']},
+            
+            {domain: 1, name: 'Uniform & Kit Management', stage: 'enable', risk: 'medium', owners: ['Uniform Coordinator', 'Junior Coordinator'], 
+             responsibilities: ['Establish uniform specifications for all age groups', 'Manage vendor relationships', 'Set purchasing authority', 'Maintain inventory records'], 
+             activities: ['Vendor management', 'Uniform ordering', 'Inventory tracking', 'Member communication']},
+            
+            {domain: 1, name: 'Junior Program Finance', stage: 'enable', risk: 'medium', owners: ['Junior Coordinator', 'Treasurer'], 
+             responsibilities: ['Set junior program budget', 'Track player fee revenue', 'Monitor expenses', 'Apply for grants'], 
+             activities: ['Annual budgeting', 'Revenue tracking', 'Expense monitoring', 'Grant applications']},
+
+            // SENIOR CRICKET
+            {domain: 2, name: 'Senior Team Operations', stage: 'operate', risk: 'low', owners: ['Captains', 'Committee'], 
+             responsibilities: ['Coordinate fixture schedules for all 5 teams', 'Manage team selections', 'Organize match-day logistics', 'Track results and participation'], 
+             activities: ['BCA fixture coordination', 'Squad announcements', 'Match setup and umpire assignment', 'Results recording']},
+            
+            {domain: 2, name: 'Senior Player Management', stage: 'operate', risk: 'medium', owners: ['President', 'Captains', 'Committee'], 
+             responsibilities: ['Lead player recruitment', 'Manage contracts and incentive schemes', 'Conduct annual performance reviews', 'Plan marquee player signing (2026/27)'], 
+             activities: ['Player recruitment', 'Contract administration', 'Performance feedback', 'Player development planning']},
+            
+            {domain: 2, name: 'Player Welfare & Support', stage: 'operate', risk: 'medium', owners: ['Committee', 'Welfare Officer'], 
+             responsibilities: ['Maintain physio services', 'Provide mental health support access', 'Manage canteen operations', 'Organize social events'], 
+             activities: ['Physio coordination', 'Mental health resource provision', 'Canteen volunteer scheduling', 'Post-match and end-of-season events']},
+            
+            {domain: 2, name: 'Senior Coaching & Strategy', stage: 'enable', risk: 'high', owners: ['Committee', 'Senior Coach'], 
+             responsibilities: ['Appoint qualified senior coach', 'Establish training sub-committee', 'Define playing strategy and tactics'], 
+             activities: ['Coach recruitment', 'Training coordination', 'Strategic planning meetings']},
+            
+            {domain: 2, name: 'Women\'s Senior Cricket', stage: 'enable', risk: 'critical', owners: ['Female sub-committee', 'Committee'], 
+             responsibilities: ['Secure women\'s cricket sponsor', 'Recruit female coach (by 2026/27)', 'Build participation base', 'Link to junior girls pathway'], 
+             activities: ['Sponsor recruitment', 'Coach hiring', 'Member recruitment', 'Team registration']},
+            
+            {domain: 2, name: '1st Grade Pathway', stage: 'plan', risk: 'high', owners: ['President', 'Committee'], 
+             responsibilities: ['Build expression of interest for 1st Grade status', 'Prepare formal application to BCA', 'Demonstrate financial and operational sustainability'], 
+             activities: ['Application preparation', 'Facility assessment', 'Financial documentation', 'BCA liaison']},
+            
+            {domain: 2, name: 'Talent Pipeline & Succession', stage: 'plan', risk: 'critical', owners: ['Junior Coordinator', 'Coaches', 'Committee'], 
+             responsibilities: ['Develop 15+ u18-21 platform from junior pathway', 'Plan captain and coach transitions', 'Mentor emerging leaders'], 
+             activities: ['Junior-to-senior tracking', 'Mentoring relationships', 'Succession planning']},
+
+            // GOVERNANCE
+            {domain: 3, name: 'Executive Succession Planning', stage: 'plan', risk: 'critical', owners: ['President', 'Committee'], 
+             responsibilities: ['Identify succession candidates for key roles', 'Develop mentoring programs', 'Document role responsibilities', 'Plan knowledge transfer'], 
+             activities: ['Candidate identification', 'Shadow assignments', 'Documentation', 'Handover planning']},
+            
+            {domain: 3, name: 'Committee Structure & Governance', stage: 'plan', risk: 'high', owners: ['President', 'Committee'], 
+             responsibilities: ['Establish sub-committee structure', 'Define decision authorities and thresholds', 'Schedule monthly governance meetings', 'Conduct annual committee review'], 
+             activities: ['Committee formation', 'Decision authority documentation', 'Meeting scheduling', 'Performance review']},
+            
+            {domain: 3, name: 'Policy & Compliance', stage: 'plan', risk: 'medium', owners: ['Secretary', 'Committee'], 
+             responsibilities: ['Maintain club constitution', 'Update code of conduct', 'Track BCA and Cricket Victoria compliance', 'Annual policy review'], 
+             activities: ['Constitution updates', 'Policy documentation', 'Compliance checking', 'Annual reviews']},
+            
+            {domain: 3, name: 'Financial Management', stage: 'enable', risk: 'high', owners: ['Treasurer', 'Committee'], 
+             responsibilities: ['Set annual club budget', 'Track income and expenses', 'Report monthly P&L to committee', 'Plan for financial targets ($50k→$75k→$100k)'], 
+             activities: ['Annual budgeting', 'Monthly accounting', 'Financial reporting', 'Bank reconciliation']},
+            
+            {domain: 3, name: 'Strategic Planning & Monitoring', stage: 'plan', risk: 'medium', owners: ['President', 'Committee'], 
+             responsibilities: ['Develop and review 3-year strategic plan', 'Track strategic milestones quarterly', 'Risk management', 'Board reporting to membership'], 
+             activities: ['Strategy development', 'Quarterly KPI tracking', 'Risk assessment', 'AGM reporting']},
+            
+            {domain: 3, name: 'Risk & Insurance Management', stage: 'enable', risk: 'medium', owners: ['Secretary', 'Committee'], 
+             responsibilities: ['Maintain insurance policies', 'Track premium changes', 'Manage incident reporting', 'Maintain risk register'], 
+             activities: ['Policy review', 'Premium negotiation', 'Incident documentation', 'Risk tracking']},
+
+            // FACILITIES
+            {domain: 4, name: 'Ground Management & Maintenance', stage: 'operate', risk: 'medium', owners: ['Committee', 'Ground Manager'], 
+             responsibilities: ['Schedule ground maintenance', 'Organize working bees', 'Maintain equipment inventory', 'Conduct safety inspections'], 
+             activities: ['Maintenance scheduling', 'Working bee coordination', 'Equipment tracking', 'Safety checks']},
+            
+            {domain: 4, name: 'Pavilion & Facility Operations', stage: 'operate', risk: 'low', owners: ['Committee', 'Facilities Officer'], 
+             responsibilities: ['Manage pavilion maintenance', 'Schedule facility bookings', 'Ensure safety compliance', 'Coordinate key access'], 
+             activities: ['Maintenance scheduling', 'Booking coordination', 'Safety checks', 'Key management']},
+
+            {domain: 4, name: 'Canteen Operations', stage: 'operate', risk: 'low', owners: ['Canteen Coordinator', 'Volunteer team'], 
+             responsibilities: ['Schedule canteen volunteers', 'Plan match-day food and beverages', 'Manage food supplier relationships', 'Handle cash and record takings', 'Ensure food safety and hygiene'], 
+             activities: ['Volunteer scheduling', 'Menu planning', 'Supplier coordination', 'Food preparation', 'Service on match days', 'Cash reconciliation']},
+
+            {domain: 4, name: 'Bar Management', stage: 'operate', risk: 'low', owners: ['Bar Manager', 'Volunteer team'], 
+             responsibilities: ['Manage bar stock and inventory', 'Coordinate bar volunteers for events', 'Ensure liquor licensing compliance', 'Record bar revenue', 'Plan bar hours for events'], 
+             activities: ['Stock ordering', 'Inventory management', 'Volunteer scheduling', 'Cash handling', 'Liquor license compliance', 'Event planning']},
+            
+            {domain: 4, name: 'Equipment & Asset Management', stage: 'enable', risk: 'low', owners: ['Equipment Manager'], 
+             responsibilities: ['Maintain asset register', 'Schedule equipment maintenance', 'Coordinate procurement', 'Conduct inventory audits'], 
+             activities: ['Asset tracking', 'Maintenance planning', 'Procurement', 'Audits']},
+            
+            {domain: 4, name: 'Turf Ground Capital Project', stage: 'plan', risk: 'critical', owners: ['President', 'Committee'], 
+             responsibilities: ['Plan Lucas Central Park acquisition', 'Coordinate design with Integra', 'Secure funding from CA, State, Council', 'Manage 2-3 year planning and 2-year construction'], 
+             activities: ['Design planning', 'Funding applications', 'Community consultation', 'Project management']},
+            
+            {domain: 4, name: 'Venue Management & Backup', stage: 'enable', risk: 'high', owners: ['Committee', 'Junior Coordinator'], 
+             responsibilities: ['Formalize venue agreements (Major League, Baseball Tunnels)', 'Develop winter training alternatives', 'Plan for facility transitions'], 
+             activities: ['Contract management', 'Backup venue planning', 'Weather contingency planning']},
+
+            // COMMERCIAL
+            {domain: 5, name: 'Sponsorship Management', stage: 'enable', risk: 'high', owners: ['President', 'Committee'], 
+             responsibilities: ['Manage sponsor renewals', 'Deliver sponsor benefits', 'Identify new sponsors', 'Recruit women\'s cricket sponsor'], 
+             activities: ['Sponsor communication', 'Benefit delivery', 'Prospect identification', 'Negotiation']},
+            
+            {domain: 5, name: 'Marketing & Brand', stage: 'operate', risk: 'medium', owners: ['Committee', 'Social media coordinator'], 
+             responsibilities: ['Maintain website', 'Manage social media content', 'Promote sponsor visibility', 'Update member communications'], 
+             activities: ['Website updates', 'Social media posting', 'Brand visibility', 'Digital content calendar']},
+
+            {domain: 5, name: 'Merchandise Management', stage: 'operate', risk: 'low', owners: ['Merchandise Coordinator'], 
+             responsibilities: ['Manage merchandise orders and supplier relationships', 'Receive deliveries and manage inventory', 'Coordinate dispatch to members', 'Maintain online shop', 'Track merchandise revenue'], 
+             activities: ['Supplier negotiation and pricing', 'Order placement and tracking', 'Delivery coordination', 'Inventory management', 'Dispatch and fulfillment', 'Online shop updates']},
+            
+            {domain: 5, name: 'Community Engagement & Events', stage: 'operate', risk: 'low', owners: ['Committee', 'Events Coordinator'], 
+             responsibilities: ['Organize club social events (end-of-season, post-match)', 'Plan presentation nights for awards and recognition', 'Run annual cricket carnival', 'Coordinate Malayalee community programming', 'Plan family-friendly activities'], 
+             activities: ['Event planning and budgeting', 'Venue and catering coordination', 'Presentation night scheduling', 'Awards ceremony organization', 'Carnival logistics', 'Community partnership activities']},
+            
+            {domain: 5, name: 'BCA Liaison & External Relations', stage: 'enable', risk: 'medium', owners: ['President', 'Committee'], 
+             responsibilities: ['Maintain quarterly BCA contact', 'Monitor competition rule changes', 'Liaise with council and sports hub', 'Manage external relationships'], 
+             activities: ['BCA meetings', 'Rule change monitoring', 'Council liaison', 'Network management']},
+            
+            {domain: 5, name: 'Grant Funding & Fundraising', stage: 'enable', risk: 'high', owners: ['Treasurer', 'Committee'], 
+             responsibilities: ['Identify grant opportunities (CA, State Gov, Council)', 'Prepare grant applications', 'Organize fundraising events'], 
+             activities: ['Grant research', 'Application writing', 'Fundraising events']},
+
+            // PEOPLE & CULTURE
+            {domain: 6, name: 'Volunteer Recruitment & Management', stage: 'enable', risk: 'high', owners: ['Committee', 'Volunteer coordinator'], 
+             responsibilities: ['Recruit volunteers annually', 'Provide volunteer training and role clarity', 'Recognize volunteer contributions', 'Plan volunteer succession'], 
+             activities: ['Recruitment campaigns', 'Role definition', 'Training and support', 'Recognition program']},
+            
+            {domain: 6, name: 'Member Engagement & Retention', stage: 'operate', risk: 'medium', owners: ['Committee', 'Membership coordinator'], 
+             responsibilities: ['Maintain member communication', 'Capture member feedback', 'Address concerns and complaints', 'Track membership growth'], 
+             activities: ['Member communications', 'Feedback surveys', 'Complaint resolution', 'Growth tracking']},
+            
+            {domain: 6, name: 'Club Culture & Values', stage: 'plan', risk: 'medium', owners: ['President', 'Committee'], 
+             responsibilities: ['Define and communicate club values', 'Enforce code of conduct', 'Establish behavioral standards', 'Monitor culture health'], 
+             activities: ['Values definition', 'Code of conduct enforcement', 'Standards setting', 'Culture surveys']},
+            
+            {domain: 6, name: 'Diversity, Equity & Inclusion', stage: 'plan', risk: 'high', owners: ['Female sub-committee', 'Community liaison'], 
+             responsibilities: ['Recruit female members and leaders', 'Support women\'s cricket pathway', 'Engage Malayalee community', 'Ensure equitable access'], 
+             activities: ['Female recruitment', 'Women\'s program support', 'Community partnerships', 'Diversity monitoring']},
+            
+            {domain: 6, name: 'Recognition & Awards', stage: 'operate', risk: 'low', owners: ['Committee', 'Social coordinator'], 
+             responsibilities: ['Recognize player achievements', 'Celebrate volunteer contributions', 'Mark member milestones', 'Host awards events'], 
+             activities: ['Awards night planning', 'Nominations and voting', 'Volunteer recognition', 'Celebration events']}
+        ];
+
+        function renderCapabilities(searchTerm = '', filterDomain = 'all') {
+            for (let d = 1; d <= 6; d++) {
+                const list = document.getElementById(`domain-${d}-list`);
+                if (list) list.innerHTML = '';
+            }
+
+            capabilities.forEach(cap => {
+                const matchesSearch = cap.name.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesFilter = filterDomain === 'all' || filterDomain === `domain-${cap.domain}`;
+                
+                if (!matchesSearch || !matchesFilter) return;
+
+                const list = document.getElementById(`domain-${cap.domain}-list`);
+                if (!list) return;
+
+                const item = document.createElement('div');
+                item.className = 'capability-item';
+                item.innerHTML = `
+                    <div class="capability-header" onclick="togglePanel(this)">
+                        <div class="cap-title-section">
+                            <div class="cap-title">${cap.name}</div>
+                        </div>
+                        <div class="cap-badges">
+                            <span class="stage-badge stage-${cap.stage}">${cap.stage}</span>
+                            <span class="risk-badge risk-${cap.risk}">${cap.risk}</span>
+                            <div class="toggle-icon">▼</div>
+                        </div>
+                    </div>
+                    <div class="capability-panel">
+                        <div class="panel-content">
+                            <div class="panel-section">
+                                <h3>Owners</h3>
+                                ${cap.owners.map(owner => `
+                                    <div class="owner-section">
+                                        <div class="owner-value">${owner}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <div class="panel-section">
+                                <h3>Responsibilities</h3>
+                                ${cap.responsibilities.map(resp => `<div class="list-item">${resp}</div>`).join('')}
+                            </div>
+
+                            <div class="panel-section">
+                                <h3>Activities</h3>
+                                ${cap.activities.map(activity => `<div class="list-item">${activity}</div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                list.appendChild(item);
+            });
+        }
+
+        window.togglePanel = function(header) {
+            header.classList.toggle('expanded');
+            header.parentElement.querySelector('.capability-panel').classList.toggle('expanded');
+        };
+
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const activeFilter = document.querySelector('.btn.active').dataset.filter;
+            renderCapabilities(e.target.value, activeFilter);
+        });
+
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                const filter = e.target.dataset.filter;
+                
+                if (filter === 'strategic') {
+                    // Hide all domain sections
+                    for (let d = 1; d <= 6; d++) {
+                        const section = document.querySelector(`.domain-section:nth-child(${d})`);
+                        if (section) section.style.display = 'none';
+                    }
+                    // Show strategic section
+                    document.getElementById('strategic-section').style.display = 'block';
+                } else {
+                    // Hide strategic section
+                    document.getElementById('strategic-section').style.display = 'none';
+                    // Show domain sections
+                    for (let d = 1; d <= 6; d++) {
+                        const section = document.querySelector(`.domain-section:nth-child(${d})`);
+                        if (section && !section.id) section.style.display = 'block';
+                    }
+                    const search = document.getElementById('searchBox').value;
+                    renderCapabilities(search, filter);
+                }
+            });
+        });
+
+        renderCapabilities();
+    </script>
+</body>
+</html>
